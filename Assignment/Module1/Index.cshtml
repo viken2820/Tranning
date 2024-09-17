@@ -1,0 +1,12 @@
+@model Kendo_MVC_WebApi.Models.City
+
+<h2>Add City</h2>
+
+@using (Html.BeginForm("AddCity", "City", FormMethod.Post))
+{
+    <div class="form-group">
+        <label for="CityName">City Name</label>
+        <input type="text" class="form-control" id="CityName" name="CityName" placeholder="Enter city name">
+    </div>
+    <button type="submit" class="btn btn-primary">Add City</button>
+}
