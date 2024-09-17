@@ -1,0 +1,124 @@
+controller code
+
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Repositories.Models;
+using Repositories.Interface;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+
+namespace Mvc.Controllers
+{
+  //  [Route("[controller]")]
+    public class EmployeeController : Controller
+    {
+        private readonly ILogger<EmployeeController> _logger;
+        private readonly IEmployeeRepositories _emp;
+
+        public EmployeeController(ILogger<EmployeeController> logger , IEmployeeRepositories emp)
+        {
+            _logger = logger;
+            _emp = emp;
+        }
+
+       private void populatedept()
+        {
+            var dept = _emp.GetDept();
+            ViewBag.deptartment = dept.Select(dept => new SelectListItem
+            {
+                Value = dept.c_deptid.ToString(),
+                Text = dept.c_deptname
+            }).ToList();
+        }
+        [HttpGet]
+        public IActionResult getDept()
+        {
+            var dept = _emp.GetDept();
+            return Json(dept);
+        }
+        
+        public IActionResult Index()
+        {
+            
+            return View();
+        }
+
+         [HttpGet]
+        public IActionResult GetEmployee()
+        {
+            var emp = _emp.GetEmployee();
+            return Json(emp);
+        }
+
+
+        [HttpPost]
+        public IActionResult Add(EmployeeModel emp)
+        {
+            _emp.AddEmployee(emp);
+            return Json(new { success = true, message = "Employee added successfully"});
+        }
+
+        [HttpPost]
+        public IActionResult SaveImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No image uploaded.");
+            }
+            var fileName = Path.GetFileName(file.FileName);
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot","images", fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                file.CopyTo(stream);
+            }
+            return Ok();
+        }
+        [HttpGet]
+        public IActionResult UpdateEmp(int id)
+        {
+            var emp = _emp.GetEmployeeId(id);
+            return View(emp);
+        }
+        [HttpPost]
+        public IActionResult UpdateEmp(EmployeeModel emp)
+        {
+            _emp.UpdateEmployee(emp);
+            return Json(new { success = true, message = "Employee updated successfully" });
+        }
+        [HttpGet]
+        public IActionResult DeleteEmp(int id)
+        {
+            var emp = _emp.GetEmployeeId(id);
+            return View(emp);
+        }
+        [HttpPost]
+        public IActionResult DeleteEmp(EmployeeModel employ)
+        {
+            _emp.DeleteEmployee(employ.c_empid);
+            return Json(new { success = true, message = "Employee deleted successfully" });
+        }
+        [HttpPost]
+        public IActionResult DeleteMultipleEmployees(List<int>ids)
+        {
+            if(ids != null && ModelState.IsValid)
+            {
+                _emp.DeleteMultiple(ids.ToList());
+            }
+            return Json(new { success = true, message = "Employees deleted successfully" });
+        }
+
+
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View("Error!");
+        }
+    }
+}
